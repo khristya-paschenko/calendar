@@ -35,4 +35,8 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 15,
   },
+  pickerContainer: {
+    gap: 10,
+    width: '100%',
+  },
 });

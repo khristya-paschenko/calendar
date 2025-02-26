@@ -44,7 +44,7 @@ export const CalendarScreen = () => {
   return (
     <SafeAreaView style={styles.outerContainer} edges={['top']}>
       <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.innerContainer}>
+        <Animated.View style={styles.innerContainer}>
           <CalendarComponent
             setSelectedDate={setSelectedDate}
             selectedDate={selectedDate}
@@ -79,7 +79,7 @@ export const CalendarScreen = () => {
               <EventFormComponent event={newEvent} />
             </Animated.View>
           </View>
-        </View>
+        </Animated.View>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );
