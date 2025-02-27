@@ -1,7 +1,7 @@
 import { Dimensions, Text, View } from 'react-native';
 import { IEvent } from '~/shared/context/calendar/calendar.types';
 import { Input } from '~/shared/components/input/input.component';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { styles } from '~/modules/components/event-form/event-form.styles';
 import { Select } from '~/shared/components/select/select.component';
 import { BtnGradientComponent } from '~/shared/components/btn-gradient/btn-gradient.component';
@@ -18,13 +18,21 @@ type EventProps = {
 };
 export const EventFormComponent = ({ event }: EventProps) => {
   const [name, setName] = useState<string>(event.name);
-  const selectedDate = new Date(event.startDate);
-  const [startDate, setStartDate] = useState<Date>(selectedDate);
+  const [startDate, setStartDate] = useState<Date>(new Date(event.startDate));
   const [endDate, setEndDate] = useState<Date>(() => {
-    const newDate = new Date(selectedDate);
+    const newDate = new Date(event.endDate);
     newDate.setHours(newDate.getHours() + 1);
     return newDate;
   });
+
+  useEffect(() => {
+    setStartDate(new Date(event.startDate));
+    setEndDate(() => {
+      const newDate = new Date(event.endDate);
+      newDate.setHours(newDate.getHours() + 1);
+      return newDate;
+    });
+  }, [event]);
 
   const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
   const [openStartTimePicker, setOpenStartTimePicker] = useState(false);
@@ -124,7 +132,11 @@ export const EventFormComponent = ({ event }: EventProps) => {
               openEndDatePicker ? styles.visible : styles.hidden,
             ]}
           >
-            <DatePicker datetime={endDate} onChange={setEndDate} />
+            <DatePicker
+              datetime={endDate}
+              onChange={setEndDate}
+              minDate={startDate}
+            />
           </View>
 
           <View
@@ -133,7 +145,17 @@ export const EventFormComponent = ({ event }: EventProps) => {
               openEndTimePicker ? styles.visible : styles.hidden,
             ]}
           >
-            <TimePicker datetime={endDate} onChange={setEndDate} />
+            <TimePicker
+              datetime={endDate}
+              onChange={setEndDate}
+              minDate={
+                new Date(
+                  new Date(startDate).setMinutes(
+                    new Date(startDate).getMinutes() + 1,
+                  ),
+                )
+              }
+            />
           </View>
         </View>
       </View>

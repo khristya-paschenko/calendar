@@ -24,7 +24,7 @@ export const CalendarScreen = () => {
 
   const toggleExpand = () => {
     setExpanded((prev) => !prev);
-    heightValue.value = expanded ? withTiming(0) : withTiming(900);
+    heightValue.value = expanded ? withTiming(0) : withTiming(600);
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
