@@ -1,8 +1,14 @@
-import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import RNDateTimePicker from '@react-native-community/datetimepicker';
 
 type DatePickerProps = {
-  date: Date;
+  datetime: Date;
+  onChange: (date: Date) => void;
 };
-export const DatePicker = ({ date }: DatePickerProps) => {
-  return <DateTimePickerAndroid value={date} display="spinner" />;
+export const DatePicker = ({ datetime, onChange }: DatePickerProps) => {
+  return (
+    <RNDateTimePicker
+      value={datetime}
+      onChange={(e, date) => onChange(date || datetime)}
+    />
+  );
 };

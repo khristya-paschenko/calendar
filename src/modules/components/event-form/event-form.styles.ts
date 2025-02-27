@@ -34,9 +34,20 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 15,
+
+    transitionProperty: 'all',
+    transitionDuration: '300ms',
   },
   pickerContainer: {
-    gap: 10,
+    gap: 5,
     width: '100%',
+  },
+  visible: {
+    position: undefined,
+    opacity: 1,
+  },
+  hidden: {
+    position: 'absolute',
+    opacity: 0,
   },
 });
