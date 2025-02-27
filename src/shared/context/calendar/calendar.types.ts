@@ -18,7 +18,7 @@ export interface IUpdateEvent {
 
 export interface TCalendarContext {
   events: IEvent[];
-  edit: (event: IUpdateEvent) => void;
+  edit: (event: Omit<IEvent, 'id'> & { id?: string }) => void;
   delete: (id: string) => void;
   add: (event: Omit<IEvent, 'id'>) => void;
 }

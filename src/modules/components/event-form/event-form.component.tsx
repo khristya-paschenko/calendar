@@ -1,7 +1,7 @@
 import { Dimensions, Text, View } from 'react-native';
 import { IEvent } from '~/shared/context/calendar/calendar.types';
 import { Input } from '~/shared/components/input/input.component';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { styles } from '~/modules/components/event-form/event-form.styles';
 import { Select } from '~/shared/components/select/select.component';
 import { BtnGradientComponent } from '~/shared/components/btn-gradient/btn-gradient.component';
@@ -12,11 +12,17 @@ import { InputBtn } from '~/shared/components/input-btn/input-btn.component';
 import { formatTime } from '~/shared/util/format-time';
 import { DatePicker } from '~/shared/components/date-picker/date-picker.component';
 import { TimePicker } from '~/shared/components/time-picker/time-picker.component';
+import { useValidateEvent } from '~/shared/hooks/useValidateEvent';
+import {
+  BottomSheetContext,
+  useBottomSheet,
+} from '~/shared/context/bottom-sheet/bottom-sheet.context';
 
 type EventProps = {
   event: Omit<IEvent, 'id'> & { id?: string };
+  toggleClose?: () => void;
 };
-export const EventFormComponent = ({ event }: EventProps) => {
+export const EventFormComponent = ({ event, toggleClose }: EventProps) => {
   const [name, setName] = useState<string>(event.name);
   const [startDate, setStartDate] = useState<Date>(new Date(event.startDate));
   const [endDate, setEndDate] = useState<Date>(() => {
@@ -24,6 +30,10 @@ export const EventFormComponent = ({ event }: EventProps) => {
     newDate.setHours(newDate.getHours() + 1);
     return newDate;
   });
+
+  const { option } = useBottomSheet<BottomSheetContext>(BottomSheetContext);
+
+  const { onSubmit, isPending, error, savedSuccessfully } = useValidateEvent();
 
   useEffect(() => {
     setStartDate(new Date(event.startDate));
@@ -33,6 +43,44 @@ export const EventFormComponent = ({ event }: EventProps) => {
       return newDate;
     });
   }, [event]);
+
+  useLayoutEffect(() => {
+    if (startDate > endDate) {
+      setEndDate(() => {
+        const newDate = new Date(startDate);
+        newDate.setHours(newDate.getHours() + 1);
+        return newDate;
+      });
+    }
+  }, [startDate]);
+
+  useEffect(() => {
+    setStartDate(new Date(event.startDate));
+    setEndDate(() => {
+      const newDate = new Date(event.endDate);
+      newDate.setHours(newDate.getHours() + 1);
+      return newDate;
+    });
+    setName(event.name);
+    // TODO: fix toggleClose
+    if (toggleClose) {
+      toggleClose();
+    }
+  }, [savedSuccessfully]);
+
+  const newEvent: Omit<IEvent, 'id'> & { id?: string } = useMemo(() => {
+    return {
+      id: event?.id,
+      name,
+      startDate,
+      endDate,
+      repeat: option,
+    };
+  }, [startDate, name, endDate, option]);
+
+  const handleSubmit = () => {
+    onSubmit(newEvent);
+  };
 
   const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
   const [openStartTimePicker, setOpenStartTimePicker] = useState(false);
@@ -162,10 +210,13 @@ export const EventFormComponent = ({ event }: EventProps) => {
 
       <Select />
 
+      {error && <Text>{error}</Text>}
+
       <BtnGradientComponent
+        disabled={isPending}
         colors={COLORS.yellowGradient}
-        text="Save"
-        onPress={() => {}}
+        text={isPending ? 'Saving' : 'Save'}
+        onPress={handleSubmit}
       />
     </View>
   );

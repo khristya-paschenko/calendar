@@ -6,14 +6,16 @@ type BtnGradientProps = {
   colors: string[];
   text: string;
   onPress: () => void;
+  disabled?: boolean;
 };
 export const BtnGradientComponent = ({
   colors,
   text,
   onPress,
+  disabled = false,
 }: BtnGradientProps) => {
   return (
-    <TouchableOpacity onPress={onPress}>
+    <TouchableOpacity onPress={onPress} disabled={disabled}>
       <LinearGradient colors={colors} style={styles.container}>
         <Text style={styles.text}>{text}</Text>
       </LinearGradient>
