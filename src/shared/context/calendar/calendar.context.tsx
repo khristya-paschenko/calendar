@@ -89,9 +89,9 @@ export const CalendarContextProvider = ({
 
   const value = {
     events: state,
-    add: addEvent,
-    edit: editEvent,
-    delete: deleteEvent,
+    addEvent: addEvent,
+    editEvent: editEvent,
+    deleteEvent: deleteEvent,
   };
 
   if (state === null) {

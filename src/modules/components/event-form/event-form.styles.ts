@@ -50,4 +50,9 @@ export const styles = StyleSheet.create({
     position: 'absolute',
     opacity: 0,
   },
+  error: {
+    fontFamily: FONTS.inter.medium,
+    color: COLORS.red,
+    fontSize: 14,
+  },
 });

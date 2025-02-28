@@ -5,26 +5,29 @@ import { CalendarComponent } from '~/shared/components/calendar/calendar.compone
 import { styles } from '~/modules/screens/calendar/calendar.styles';
 import { useCalendarContext } from '~/shared/context/calendar/calendar.context';
 import { EventFormComponent } from '~/modules/components/event-form/event-form.component';
-import { ERepeat } from '~/shared/context/calendar/calendar.types';
+import { ERepeat, IEvent } from '~/shared/context/calendar/calendar.types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '~/shared/styles/colors';
-import { useContext, useMemo, useState } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import { BottomSheetContext } from '~/shared/context/bottom-sheet/bottom-sheet.context';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { filterEvents } from '~/shared/util/filter-events';
+import { EventComponent } from '~/modules/components/event/event.component';
 export const CalendarScreen = () => {
   const { events } = useCalendarContext();
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState<string>(today.toString());
   const [expanded, setExpanded] = useState<boolean>(false);
   const heightValue = useSharedValue(0);
+  const [isEditing, setIsEditing] = useState<string>('');
 
   const toggleExpand = () => {
     setExpanded((prev) => !prev);
-    heightValue.value = expanded ? withTiming(0) : withTiming(600);
+    heightValue.value = expanded ? withTiming(0) : withTiming(640);
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -41,6 +44,21 @@ export const CalendarScreen = () => {
     };
   }, [selectedDate]);
 
+  const filteredEvent = useMemo(() => {
+    return filterEvents(selectedDate, events);
+  }, [selectedDate]);
+
+  const renderItem = useCallback(
+    (item: IEvent) => {
+      if (isEditing === item.id) {
+        return <EventFormComponent event={item} />;
+      }
+
+      return <EventComponent event={item} onEdit={setIsEditing} />;
+    },
+    [isEditing, events],
+  );
+
   return (
     <SafeAreaView style={styles.outerContainer} edges={['top']}>
       <KeyboardAwareScrollView showsVerticalScrollIndicator={false}>
@@ -53,14 +71,15 @@ export const CalendarScreen = () => {
             <FlatList
               scrollEnabled={false}
               contentContainerStyle={{ gap: 10 }}
-              data={events}
-              renderItem={({ item }) => <EventFormComponent event={item} />}
-              keyExtractor={(item) => item.id}
+              data={filteredEvent}
+              renderItem={({ item }) => renderItem(item)}
+              keyExtractor={(item, index) => item.id + `${index}`}
               ListEmptyComponent={
                 <Text style={styles.noEvents}>
                   You don't have any events for this day
                 </Text>
               }
+              initialNumToRender={20}
             />
             <TouchableOpacity
               style={styles.addBtnContainer}

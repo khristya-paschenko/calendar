@@ -18,9 +18,9 @@ export interface IUpdateEvent {
 
 export interface TCalendarContext {
   events: IEvent[];
-  edit: (event: Omit<IEvent, 'id'> & { id?: string }) => void;
-  delete: (id: string) => void;
-  add: (event: Omit<IEvent, 'id'>) => void;
+  editEvent: (event: Omit<IEvent, 'id'> & { id?: string }) => void;
+  deleteEvent: (id: string) => void;
+  addEvent: (event: Omit<IEvent, 'id'>) => void;
 }
 export enum ERepeat {
   WEEKLY = 'WEEKLY',
@@ -33,7 +33,7 @@ export const ERepeatText: Record<ERepeat, string> = {
   [ERepeat.WEEKLY]: 'Every week',
   [ERepeat.BI_WEEKLY]: 'Every two weeks',
   [ERepeat.MONTHLY]: 'Every month',
-  [ERepeat.ONCE]: 'Once',
+  [ERepeat.ONCE]: 'Never',
 };
 
 export enum ECalendarReducerAction {

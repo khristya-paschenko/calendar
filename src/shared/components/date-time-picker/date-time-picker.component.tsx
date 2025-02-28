@@ -1,21 +1,26 @@
 import RNDateTimePicker from '@react-native-community/datetimepicker';
+import { Platform } from 'react-native';
 
-type TimePickerProps = {
+type DatePickerProps = {
   datetime: Date;
   onChange: (date: Date) => void;
   minDate?: Date;
+  platform: typeof Platform.OS;
+  mode: 'date' | 'time';
 };
-export const TimePicker = ({
+export const DateTimePicker = ({
   datetime,
   onChange,
   minDate,
-}: TimePickerProps) => {
+  platform,
+  mode,
+}: DatePickerProps) => {
   return (
     <RNDateTimePicker
       value={datetime}
-      mode="time"
-      display="spinner"
+      display={platform === 'ios' ? 'spinner' : 'default'}
       minimumDate={minDate}
+      mode={mode}
       onChange={(e, date) => onChange(date || datetime)}
     />
   );

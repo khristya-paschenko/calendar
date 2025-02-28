@@ -1,7 +1,7 @@
-import { Dimensions, Text, View } from 'react-native';
+import { Dimensions, Platform, Text, View } from 'react-native';
 import { IEvent } from '~/shared/context/calendar/calendar.types';
 import { Input } from '~/shared/components/input/input.component';
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { styles } from '~/modules/components/event-form/event-form.styles';
 import { Select } from '~/shared/components/select/select.component';
 import { BtnGradientComponent } from '~/shared/components/btn-gradient/btn-gradient.component';
@@ -17,12 +17,16 @@ import {
   BottomSheetContext,
   useBottomSheet,
 } from '~/shared/context/bottom-sheet/bottom-sheet.context';
+import { DateTimePicker } from '~/shared/components/date-time-picker/date-time-picker.component';
+import Animated from 'react-native-reanimated';
+
+type TPicker = 'startTime' | 'startDate' | 'endTime' | 'endDate' | null;
 
 type EventProps = {
   event: Omit<IEvent, 'id'> & { id?: string };
   toggleClose?: () => void;
 };
-export const EventFormComponent = ({ event, toggleClose }: EventProps) => {
+export const EventFormComponent = memo(({ event, toggleClose }: EventProps) => {
   const [name, setName] = useState<string>(event.name);
   const [startDate, setStartDate] = useState<Date>(new Date(event.startDate));
   const [endDate, setEndDate] = useState<Date>(() => {
@@ -44,7 +48,7 @@ export const EventFormComponent = ({ event, toggleClose }: EventProps) => {
     });
   }, [event]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (startDate > endDate) {
       setEndDate(() => {
         const newDate = new Date(startDate);
@@ -68,54 +72,25 @@ export const EventFormComponent = ({ event, toggleClose }: EventProps) => {
     }
   }, [savedSuccessfully]);
 
-  const newEvent: Omit<IEvent, 'id'> & { id?: string } = useMemo(() => {
-    return {
+  const handleSubmit = () => {
+    onSubmit({
       id: event?.id,
       name,
       startDate,
       endDate,
       repeat: option,
-    };
-  }, [startDate, name, endDate, option]);
-
-  const handleSubmit = () => {
-    onSubmit(newEvent);
+    });
   };
 
-  const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
-  const [openStartTimePicker, setOpenStartTimePicker] = useState(false);
-  const [openEndDatePicker, setOpenEndDatePicker] = useState(false);
-  const [openEndTimePicker, setOpenEndTimePicker] = useState(false);
+  const [isOpenPicker, setIsOpenPicker] = useState<TPicker>(null);
 
-  const toggleStartDatePicker = () => {
-    setOpenStartDatePicker((prev) => !prev);
-    setOpenStartTimePicker(false);
-    setOpenEndTimePicker(false);
-    setOpenEndDatePicker(false);
-  };
-
-  const toggleStartTimePicker = () => {
-    setOpenStartTimePicker((prev) => !prev);
-    setOpenStartDatePicker(false);
-    setOpenEndTimePicker(false);
-    setOpenEndDatePicker(false);
-  };
-
-  const toggleEndDatePicker = () => {
-    setOpenEndDatePicker((prev) => !prev);
-    setOpenEndTimePicker(false);
-    setOpenStartDatePicker(false);
-    setOpenStartTimePicker(false);
-  };
-
-  const toggleEndTimePicker = () => {
-    setOpenEndTimePicker((prev) => !prev);
-    setOpenEndDatePicker(false);
-    setOpenStartDatePicker(false);
-    setOpenStartTimePicker(false);
+  const togglePicker = (option: TPicker) => {
+    setIsOpenPicker((current) => (current === option ? null : option));
   };
 
   const width = Dimensions.get('window').width;
+
+  const platform = Platform.OS;
   return (
     <View style={styles.container}>
       <Input label="Event Name" value={name} onChange={(v) => setName(v)} />
@@ -129,31 +104,14 @@ export const EventFormComponent = ({ event, toggleClose }: EventProps) => {
               <InputBtn
                 containerStyles={{ width: width * 0.3 }}
                 text={formatDate(startDate)}
-                onPress={toggleStartDatePicker}
+                onPress={() => togglePicker('startDate')}
               />
               <InputBtn
                 containerStyles={{ width: width * 0.3 }}
                 text={formatTime(startDate)}
-                onPress={toggleStartTimePicker}
+                onPress={() => togglePicker('startTime')}
               />
             </View>
-          </View>
-          <View
-            style={[
-              styles.animated,
-              openStartDatePicker ? styles.visible : styles.hidden,
-            ]}
-          >
-            <DatePicker datetime={startDate} onChange={setStartDate} />
-          </View>
-
-          <View
-            style={[
-              styles.animated,
-              openStartTimePicker ? styles.visible : styles.hidden,
-            ]}
-          >
-            <TimePicker datetime={startDate} onChange={setStartDate} />
           </View>
         </View>
         <View style={styles.pickerContainer}>
@@ -164,53 +122,56 @@ export const EventFormComponent = ({ event, toggleClose }: EventProps) => {
               <InputBtn
                 containerStyles={{ width: width * 0.3 }}
                 text={formatDate(endDate)}
-                onPress={toggleEndDatePicker}
+                onPress={() => togglePicker('endDate')}
               />
               <InputBtn
                 containerStyles={{ width: width * 0.3 }}
                 text={formatTime(endDate)}
-                onPress={toggleEndTimePicker}
+                onPress={() => togglePicker('endTime')}
               />
             </View>
           </View>
 
-          <View
-            style={[
-              styles.animated,
-              openEndDatePicker ? styles.visible : styles.hidden,
-            ]}
-          >
-            <DatePicker
-              datetime={endDate}
-              onChange={setEndDate}
-              minDate={startDate}
-            />
-          </View>
-
-          <View
-            style={[
-              styles.animated,
-              openEndTimePicker ? styles.visible : styles.hidden,
-            ]}
-          >
-            <TimePicker
-              datetime={endDate}
-              onChange={setEndDate}
-              minDate={
-                new Date(
-                  new Date(startDate).setMinutes(
-                    new Date(startDate).getMinutes() + 1,
-                  ),
-                )
-              }
-            />
-          </View>
+          {isOpenPicker && (
+            <Animated.View style={[styles.animated]}>
+              <DateTimePicker
+                datetime={
+                  ['startDate', 'startTime'].includes(isOpenPicker)
+                    ? startDate
+                    : endDate
+                }
+                onChange={
+                  ['startDate', 'startTime'].includes(isOpenPicker)
+                    ? setStartDate
+                    : setEndDate
+                }
+                platform={platform}
+                mode={
+                  ['startDate', 'endDate'].includes(isOpenPicker)
+                    ? 'date'
+                    : 'time'
+                }
+                minDate={
+                  (['startDate', 'startTime', 'endDate'].includes(
+                    isOpenPicker,
+                  ) &&
+                    startDate) ||
+                  (isOpenPicker === 'endTime' &&
+                    new Date(
+                      new Date(startDate).setMinutes(
+                        new Date(startDate).getMinutes() + 1,
+                      ),
+                    ))
+                }
+              />
+            </Animated.View>
+          )}
         </View>
       </View>
 
       <Select />
 
-      {error && <Text>{error}</Text>}
+      {error && <Text style={styles.error}>{error}</Text>}
 
       <BtnGradientComponent
         disabled={isPending}
@@ -220,4 +181,4 @@ export const EventFormComponent = ({ event, toggleClose }: EventProps) => {
       />
     </View>
   );
-};
+});

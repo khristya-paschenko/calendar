@@ -7,4 +7,5 @@ export const COLORS = Object.freeze({
   yellow: '#ffba2e',
   yellowGradient: ['#fed621', '#feb401'],
   white: '#fff',
+  red: '#de3d3d',
 });
