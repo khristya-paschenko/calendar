@@ -17,17 +17,28 @@ import Animated, {
 } from 'react-native-reanimated';
 import { filterEvents } from '~/shared/util/filter-events';
 import { EventComponent } from '~/modules/components/event/event.component';
+import { exp } from '@gorhom/bottom-sheet/lib/typescript/utilities/easingExp';
 export const CalendarScreen = () => {
   const { events } = useCalendarContext();
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState<string>(today.toString());
-  const [expanded, setExpanded] = useState<boolean>(false);
   const heightValue = useSharedValue(0);
-  const [isEditing, setIsEditing] = useState<string>('');
 
-  const toggleExpand = () => {
-    setExpanded((prev) => !prev);
-    heightValue.value = expanded ? withTiming(0) : withTiming(640);
+  const [isOpen, setIsOpen] = useState<string | '' | 'form'>('');
+
+  const handleIsOpen = (option: string) => {
+    if (option === 'from') {
+      setIsOpen((prev) => {
+        if (prev === option) {
+          return '';
+        }
+        return option;
+      });
+    } else {
+      setIsOpen(option);
+    }
+
+    heightValue.value = isOpen === 'form' ? withTiming(0) : withTiming(640);
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -50,13 +61,13 @@ export const CalendarScreen = () => {
 
   const renderItem = useCallback(
     (item: IEvent) => {
-      if (isEditing === item.id) {
-        return <EventFormComponent event={item} setIsEditing={setIsEditing} />;
+      if (isOpen === item.id) {
+        return <EventFormComponent event={item} setIsEditing={handleIsOpen} />;
       }
 
-      return <EventComponent event={item} onEdit={setIsEditing} />;
+      return <EventComponent event={item} onEdit={handleIsOpen} />;
     },
-    [isEditing, events],
+    [isOpen, events],
   );
 
   return (
@@ -83,7 +94,7 @@ export const CalendarScreen = () => {
             />
             <TouchableOpacity
               style={styles.addBtnContainer}
-              onPress={toggleExpand}
+              onPress={() => handleIsOpen('form')}
             >
               <LinearGradient
                 style={styles.addBtnGradient}
