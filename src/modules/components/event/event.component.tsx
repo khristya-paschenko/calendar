@@ -13,17 +13,20 @@ import { formatTime } from '~/shared/util/format-time';
 type EventProps = {
   event: IEvent;
   onEdit: (id: string) => void;
+  disabled: boolean;
 };
-export const EventComponent = ({ event, onEdit }: EventProps) => {
+export const EventComponent = ({ event, onEdit, disabled }: EventProps) => {
   const { deleteEvent } = useCalendarContext();
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>{event.name}</Text>
         <View style={styles.btnContainer}>
-          <TouchableOpacity onPress={() => onEdit(event.id)}>
-            <Pencil width={25} height={25} fill={COLORS.yellow} />
-          </TouchableOpacity>
+          {disabled && (
+            <TouchableOpacity onPress={() => onEdit(event.id)}>
+              <Pencil width={25} height={25} fill={COLORS.yellow} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity onPress={() => deleteEvent(event.id)}>
             <Trash width={25} height={25} fill={COLORS.red} />
           </TouchableOpacity>

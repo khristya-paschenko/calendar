@@ -23,11 +23,19 @@ export const CalendarScreen = () => {
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState<string>(today.toString());
   const heightValue = useSharedValue(0);
-
   const [isOpen, setIsOpen] = useState<string | '' | 'form'>('');
+  const [isToday, setIsToday] = useState<boolean>(false);
+  const [newEvent, setNewEvent] = useState<Omit<IEvent, 'id'>>({
+    name: '',
+    endDate: selectedDate,
+    startDate: selectedDate,
+    repeat: ERepeat.ONCE,
+  });
 
   const handleIsOpen = (option: string) => {
-    if (option === 'from') {
+    console.log(option, 'option ');
+
+    if (option === 'form') {
       setIsOpen((prev) => {
         if (prev === option) {
           return '';
@@ -46,13 +54,17 @@ export const CalendarScreen = () => {
     opacity: heightValue.value > 0 ? 1 : 0,
   }));
 
-  const newEvent = useMemo(() => {
-    return {
+  useEffect(() => {
+    setNewEvent({
       name: '',
       endDate: selectedDate,
       startDate: selectedDate,
       repeat: ERepeat.ONCE,
-    };
+    });
+    setIsToday(
+      today.toISOString().split('T')[0] ===
+        new Date(selectedDate).toISOString().split('T')[0],
+    );
   }, [selectedDate]);
 
   const filteredEvent = useMemo(() => {
@@ -62,10 +74,12 @@ export const CalendarScreen = () => {
   const renderItem = useCallback(
     (item: IEvent) => {
       if (isOpen === item.id) {
-        return <EventFormComponent event={item} setIsEditing={handleIsOpen} />;
+        return <EventFormComponent event={item} setIsOpen={handleIsOpen} />;
       }
 
-      return <EventComponent event={item} onEdit={handleIsOpen} />;
+      return (
+        <EventComponent event={item} onEdit={handleIsOpen} disabled={isToday} />
+      );
     },
     [isOpen, events],
   );
@@ -92,22 +106,29 @@ export const CalendarScreen = () => {
               }
               initialNumToRender={20}
             />
-            <TouchableOpacity
-              style={styles.addBtnContainer}
-              onPress={() => handleIsOpen('form')}
-            >
-              <LinearGradient
-                style={styles.addBtnGradient}
-                colors={COLORS.yellowGradient}
-              >
-                <Text style={styles.plusIcon}>+</Text>
-              </LinearGradient>
-              <Text style={styles.addBtnText}>Create New Event</Text>
-            </TouchableOpacity>
+            {isToday && (
+              <>
+                <TouchableOpacity
+                  style={styles.addBtnContainer}
+                  onPress={() => handleIsOpen('form')}
+                >
+                  <LinearGradient
+                    style={styles.addBtnGradient}
+                    colors={COLORS.yellowGradient}
+                  >
+                    <Text style={styles.plusIcon}>+</Text>
+                  </LinearGradient>
+                  <Text style={styles.addBtnText}>Create New Event</Text>
+                </TouchableOpacity>
 
-            <Animated.View style={[animatedStyle, styles.animated]}>
-              <EventFormComponent event={newEvent} />
-            </Animated.View>
+                <Animated.View style={[animatedStyle, styles.animated]}>
+                  <EventFormComponent
+                    event={newEvent}
+                    setIsOpen={handleIsOpen}
+                  />
+                </Animated.View>
+              </>
+            )}
           </View>
         </Animated.View>
       </KeyboardAwareScrollView>

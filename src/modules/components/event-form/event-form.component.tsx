@@ -19,162 +19,155 @@ type TPicker = 'startTime' | 'startDate' | 'endTime' | 'endDate' | null;
 
 type EventProps = {
   event: Omit<IEvent, 'id'> & { id?: string };
-  toggleClose?: () => void;
-  setIsEditing?: (isEditing: string) => void;
+  setIsOpen: (option: string) => void;
 };
-export const EventFormComponent = memo(
-  ({ event, toggleClose, setIsEditing }: EventProps) => {
-    const [name, setName] = useState<string>(event.name);
-    const [startDate, setStartDate] = useState<Date>(new Date(event.startDate));
-    const [endDate, setEndDate] = useState<Date>(() => {
+export const EventFormComponent = memo(({ event, setIsOpen }: EventProps) => {
+  const [name, setName] = useState<string>(event.name);
+  const [startDate, setStartDate] = useState<Date>(new Date(event.startDate));
+  const [endDate, setEndDate] = useState<Date>(() => {
+    const newDate = new Date(event.endDate);
+    newDate.setHours(newDate.getHours() + 1);
+    return newDate;
+  });
+
+  const { option } = useContext<BottomSheetContext>(BottomSheetContext);
+
+  const { onSubmit, error } = useValidateEvent(() => {
+    setStartDate(new Date(event.startDate));
+    // setEndDate(() => {
+    //   const newDate = new Date(event.endDate);
+    //   newDate.setHours(newDate.getHours() + 1);
+    //   return newDate;
+    // });
+    setName(event.name);
+    setIsOpen('');
+  });
+
+  useEffect(() => {
+    setStartDate(new Date(event.startDate));
+    setEndDate(() => {
       const newDate = new Date(event.endDate);
       newDate.setHours(newDate.getHours() + 1);
       return newDate;
     });
+  }, [event]);
 
-    const { option } = useContext<BottomSheetContext>(BottomSheetContext);
-
-    const { onSubmit, error } = useValidateEvent(() => {
-      setStartDate(new Date(event.startDate));
-      // setEndDate(() => {
-      //   const newDate = new Date(event.endDate);
-      //   newDate.setHours(newDate.getHours() + 1);
-      //   return newDate;
-      // });
-      setName(event.name);
-      if (setIsEditing) {
-        setIsEditing('');
-      }
-
-      //TODO: toggle close
-    });
-
-    useEffect(() => {
-      setStartDate(new Date(event.startDate));
+  useEffect(() => {
+    if (startDate > endDate) {
       setEndDate(() => {
-        const newDate = new Date(event.endDate);
+        const newDate = new Date(startDate);
         newDate.setHours(newDate.getHours() + 1);
         return newDate;
       });
-    }, [event]);
+    }
+  }, [startDate]);
 
-    useEffect(() => {
-      if (startDate > endDate) {
-        setEndDate(() => {
-          const newDate = new Date(startDate);
-          newDate.setHours(newDate.getHours() + 1);
-          return newDate;
-        });
-      }
-    }, [startDate]);
+  const handleSubmit = () => {
+    onSubmit({
+      id: event?.id,
+      name,
+      startDate,
+      endDate,
+      repeat: option,
+    });
+  };
 
-    const handleSubmit = () => {
-      onSubmit({
-        id: event?.id,
-        name,
-        startDate,
-        endDate,
-        repeat: option,
-      });
-    };
+  const [isOpenPicker, setIsOpenPicker] = useState<TPicker>(null);
 
-    const [isOpenPicker, setIsOpenPicker] = useState<TPicker>(null);
+  const togglePicker = (option: TPicker) => {
+    setIsOpenPicker((current) => (current === option ? null : option));
+  };
 
-    const togglePicker = (option: TPicker) => {
-      setIsOpenPicker((current) => (current === option ? null : option));
-    };
+  const width = Dimensions.get('window').width;
 
-    const width = Dimensions.get('window').width;
+  const platform = Platform.OS;
+  return (
+    <View style={styles.container}>
+      <Input label="Event Name" value={name} onChange={(v) => setName(v)} />
 
-    const platform = Platform.OS;
-    return (
-      <View style={styles.container}>
-        <Input label="Event Name" value={name} onChange={(v) => setName(v)} />
+      <View style={styles.dateTimeContainer}>
+        <View style={styles.pickerContainer}>
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldTitle}>Starts</Text>
 
-        <View style={styles.dateTimeContainer}>
-          <View style={styles.pickerContainer}>
-            <View style={styles.fieldContainer}>
-              <Text style={styles.fieldTitle}>Starts</Text>
-
-              <View style={styles.btnContainer}>
-                <InputBtn
-                  containerStyles={{ width: width * 0.3 }}
-                  text={formatDate(startDate)}
-                  onPress={() => togglePicker('startDate')}
-                />
-                <InputBtn
-                  containerStyles={{ width: width * 0.3 }}
-                  text={formatTime(startDate)}
-                  onPress={() => togglePicker('startTime')}
-                />
-              </View>
+            <View style={styles.btnContainer}>
+              <InputBtn
+                containerStyles={{ width: width * 0.3 }}
+                text={formatDate(startDate)}
+                onPress={() => togglePicker('startDate')}
+              />
+              <InputBtn
+                containerStyles={{ width: width * 0.3 }}
+                text={formatTime(startDate)}
+                onPress={() => togglePicker('startTime')}
+              />
             </View>
-          </View>
-          <View style={styles.pickerContainer}>
-            <View style={styles.fieldContainer}>
-              <Text style={styles.fieldTitle}>Ends</Text>
-
-              <View style={styles.btnContainer}>
-                <InputBtn
-                  containerStyles={{ width: width * 0.3 }}
-                  text={formatDate(endDate)}
-                  onPress={() => togglePicker('endDate')}
-                />
-                <InputBtn
-                  containerStyles={{ width: width * 0.3 }}
-                  text={formatTime(endDate)}
-                  onPress={() => togglePicker('endTime')}
-                />
-              </View>
-            </View>
-
-            {isOpenPicker && (
-              <Animated.View style={[styles.animated]}>
-                <DateTimePicker
-                  datetime={
-                    ['startDate', 'startTime'].includes(isOpenPicker)
-                      ? startDate
-                      : endDate
-                  }
-                  onChange={
-                    ['startDate', 'startTime'].includes(isOpenPicker)
-                      ? setStartDate
-                      : setEndDate
-                  }
-                  platform={platform}
-                  mode={
-                    ['startDate', 'endDate'].includes(isOpenPicker)
-                      ? 'date'
-                      : 'time'
-                  }
-                  minDate={
-                    (['startDate', 'startTime', 'endDate'].includes(
-                      isOpenPicker,
-                    ) &&
-                      startDate) ||
-                    (isOpenPicker === 'endTime' &&
-                      new Date(
-                        new Date(startDate).setMinutes(
-                          new Date(startDate).getMinutes() + 1,
-                        ),
-                      ))
-                  }
-                />
-              </Animated.View>
-            )}
           </View>
         </View>
+        <View style={styles.pickerContainer}>
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldTitle}>Ends</Text>
 
-        <Select />
+            <View style={styles.btnContainer}>
+              <InputBtn
+                containerStyles={{ width: width * 0.3 }}
+                text={formatDate(endDate)}
+                onPress={() => togglePicker('endDate')}
+              />
+              <InputBtn
+                containerStyles={{ width: width * 0.3 }}
+                text={formatTime(endDate)}
+                onPress={() => togglePicker('endTime')}
+              />
+            </View>
+          </View>
 
-        {error && <Text style={styles.error}>{error}</Text>}
-
-        <BtnGradientComponent
-          colors={COLORS.yellowGradient}
-          text="Save"
-          onPress={handleSubmit}
-        />
+          {isOpenPicker && (
+            <Animated.View style={[styles.animated]}>
+              <DateTimePicker
+                datetime={
+                  ['startDate', 'startTime'].includes(isOpenPicker)
+                    ? startDate
+                    : endDate
+                }
+                onChange={
+                  ['startDate', 'startTime'].includes(isOpenPicker)
+                    ? setStartDate
+                    : setEndDate
+                }
+                platform={platform}
+                mode={
+                  ['startDate', 'endDate'].includes(isOpenPicker)
+                    ? 'date'
+                    : 'time'
+                }
+                minDate={
+                  (['startDate', 'startTime', 'endDate'].includes(
+                    isOpenPicker,
+                  ) &&
+                    startDate) ||
+                  (isOpenPicker === 'endTime' &&
+                    new Date(
+                      new Date(startDate).setMinutes(
+                        new Date(startDate).getMinutes() + 1,
+                      ),
+                    ))
+                }
+              />
+            </Animated.View>
+          )}
+        </View>
       </View>
-    );
-  },
-);
+
+      <Select />
+
+      {error && <Text style={styles.error}>{error}</Text>}
+
+      <BtnGradientComponent
+        colors={COLORS.yellowGradient}
+        text="Save"
+        onPress={handleSubmit}
+      />
+    </View>
+  );
+});
