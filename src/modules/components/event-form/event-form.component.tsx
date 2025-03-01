@@ -13,7 +13,11 @@ import { formatTime } from '~/shared/util/format-time';
 import { useValidateEvent } from '~/shared/hooks/useValidateEvent';
 import { BottomSheetContext } from '~/shared/context/bottom-sheet/bottom-sheet.context';
 import { DateTimePicker } from '~/shared/components/date-time-picker/date-time-picker.component';
-import Animated from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 type TPicker = 'startTime' | 'startDate' | 'endTime' | 'endDate' | null;
 
@@ -24,6 +28,7 @@ type EventProps = {
 export const EventFormComponent = memo(({ event, setIsOpen }: EventProps) => {
   const [name, setName] = useState<string>(event.name);
   const [startDate, setStartDate] = useState<Date>(new Date(event.startDate));
+  const heightValue = useSharedValue(0);
   const [endDate, setEndDate] = useState<Date>(() => {
     const newDate = new Date(event.endDate);
     newDate.setHours(newDate.getHours() + 1);
@@ -75,8 +80,23 @@ export const EventFormComponent = memo(({ event, setIsOpen }: EventProps) => {
   const [isOpenPicker, setIsOpenPicker] = useState<TPicker>(null);
 
   const togglePicker = (option: TPicker) => {
-    setIsOpenPicker((current) => (current === option ? null : option));
+    setIsOpenPicker((current) => {
+      let res;
+      if (current === option) {
+        res = null;
+      } else {
+        res = option;
+      }
+      heightValue.value = res ? withTiming(200) : withTiming(0);
+
+      return res;
+    });
   };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    height: heightValue.value,
+    opacity: heightValue.value > 0 ? 1 : 0,
+  }));
 
   const width = Dimensions.get('window').width;
 
@@ -92,12 +112,18 @@ export const EventFormComponent = memo(({ event, setIsOpen }: EventProps) => {
 
             <View style={styles.btnContainer}>
               <InputBtn
-                containerStyles={{ width: width * 0.3 }}
+                containerStyles={[
+                  { width: width * 0.3 },
+                  isOpenPicker === 'startDate' && styles.selected,
+                ]}
                 text={formatDate(startDate)}
                 onPress={() => togglePicker('startDate')}
               />
               <InputBtn
-                containerStyles={{ width: width * 0.3 }}
+                containerStyles={[
+                  { width: width * 0.3 },
+                  isOpenPicker === 'startTime' && styles.selected,
+                ]}
                 text={formatTime(startDate)}
                 onPress={() => togglePicker('startTime')}
               />
@@ -110,52 +136,54 @@ export const EventFormComponent = memo(({ event, setIsOpen }: EventProps) => {
 
             <View style={styles.btnContainer}>
               <InputBtn
-                containerStyles={{ width: width * 0.3 }}
+                containerStyles={[
+                  { width: width * 0.3 },
+                  isOpenPicker === 'endDate' && styles.selected,
+                ]}
                 text={formatDate(endDate)}
                 onPress={() => togglePicker('endDate')}
               />
               <InputBtn
-                containerStyles={{ width: width * 0.3 }}
+                containerStyles={[
+                  { width: width * 0.3 },
+                  isOpenPicker === 'endTime' && styles.selected,
+                ]}
                 text={formatTime(endDate)}
                 onPress={() => togglePicker('endTime')}
               />
             </View>
           </View>
 
-          {isOpenPicker && (
-            <Animated.View style={[styles.animated]}>
-              <DateTimePicker
-                datetime={
-                  ['startDate', 'startTime'].includes(isOpenPicker)
-                    ? startDate
-                    : endDate
-                }
-                onChange={
-                  ['startDate', 'startTime'].includes(isOpenPicker)
-                    ? setStartDate
-                    : setEndDate
-                }
-                platform={platform}
-                mode={
-                  ['startDate', 'endDate'].includes(isOpenPicker)
-                    ? 'date'
-                    : 'time'
-                }
-                minDate={
-                  (['startDate', 'startTime', 'endDate'].includes(
-                    isOpenPicker,
-                  ) &&
-                    startDate) ||
-                  (isOpenPicker === 'endTime' &&
-                    new Date(
-                      new Date(startDate).setMinutes(
-                        new Date(startDate).getMinutes() + 1,
-                      ),
-                    ))
-                }
-              />
-            </Animated.View>
-          )}
+          <Animated.View style={[styles.animated, animatedStyle]}>
+            <DateTimePicker
+              datetime={
+                ['startDate', 'startTime'].includes(isOpenPicker)
+                  ? startDate
+                  : endDate
+              }
+              onChange={
+                ['startDate', 'startTime'].includes(isOpenPicker)
+                  ? setStartDate
+                  : setEndDate
+              }
+              platform={platform}
+              mode={
+                ['startDate', 'endDate'].includes(isOpenPicker)
+                  ? 'date'
+                  : 'time'
+              }
+              minDate={
+                (['startDate', 'startTime', 'endDate'].includes(isOpenPicker) &&
+                  startDate) ||
+                (isOpenPicker === 'endTime' &&
+                  new Date(
+                    new Date(startDate).setMinutes(
+                      new Date(startDate).getMinutes() + 1,
+                    ),
+                  ))
+              }
+            />
+          </Animated.View>
         </View>
       </View>
 

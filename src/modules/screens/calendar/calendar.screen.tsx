@@ -8,8 +8,7 @@ import { EventFormComponent } from '~/modules/components/event-form/event-form.c
 import { ERepeat, IEvent } from '~/shared/context/calendar/calendar.types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '~/shared/styles/colors';
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { BottomSheetContext } from '~/shared/context/bottom-sheet/bottom-sheet.context';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -17,7 +16,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { filterEvents } from '~/shared/util/filter-events';
 import { EventComponent } from '~/modules/components/event/event.component';
-import { exp } from '@gorhom/bottom-sheet/lib/typescript/utilities/easingExp';
+import PlusIcon from '~/../assets/icons/plus-icon.svg';
+
 export const CalendarScreen = () => {
   const { events } = useCalendarContext();
   const today = new Date();
@@ -33,8 +33,6 @@ export const CalendarScreen = () => {
   });
 
   const handleIsOpen = (option: string) => {
-    console.log(option, 'option ');
-
     if (option === 'form') {
       setIsOpen((prev) => {
         if (prev === option) {
@@ -46,7 +44,7 @@ export const CalendarScreen = () => {
       setIsOpen(option);
     }
 
-    heightValue.value = isOpen === 'form' ? withTiming(0) : withTiming(640);
+    heightValue.value = isOpen === 'form' ? withTiming(0) : withTiming(580);
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -116,7 +114,7 @@ export const CalendarScreen = () => {
                     style={styles.addBtnGradient}
                     colors={COLORS.yellowGradient}
                   >
-                    <Text style={styles.plusIcon}>+</Text>
+                    <PlusIcon width={18} height={18} fill={COLORS.white} />
                   </LinearGradient>
                   <Text style={styles.addBtnText}>Create New Event</Text>
                 </TouchableOpacity>

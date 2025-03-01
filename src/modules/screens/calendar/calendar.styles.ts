@@ -34,11 +34,6 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 50,
   },
-  plusIcon: {
-    fontFamily: FONTS.inter.semiBold,
-    fontSize: 20,
-    color: COLORS.white,
-  },
   addBtnText: {
     fontFamily: FONTS.inter.medium,
     fontSize: 16,
