@@ -4,44 +4,48 @@ export const filterEvents = (
   selectedDay: string,
   events: IEvent[],
 ): IEvent[] => {
-  const selectedDate = new Date(selectedDay);
+  const selectedDate = new Date(selectedDay).toISOString().split('T')[0];
+  const filteredEvents: IEvent[] = [];
 
-  return events.filter((event) => {
+  events.forEach((event) => {
     const eventStartDate = new Date(event.startDate);
     const eventEndDate = new Date(event.endDate);
-    const isEventOnSelectedDay =
-      (eventStartDate <= selectedDate && eventEndDate >= selectedDate) ||
-      eventStartDate.toISOString().split('T')[0] === selectedDay ||
-      eventEndDate.toISOString().split('T')[0] === selectedDay;
-
-    if (event.repeat === ERepeat.ONCE) {
-      return isEventOnSelectedDay;
-    }
-
-    let tempDate = new Date(event.startDate);
     const eventDuration = eventEndDate.getTime() - eventStartDate.getTime();
-    const repeats = event.repeat;
-    let eventOccursOnSelectedDay = false;
 
-    while (tempDate <= selectedDate) {
-      const repeatStart = new Date(tempDate);
-      const repeatEnd = new Date(tempDate);
-      repeatEnd.setTime(repeatEnd.getTime() + eventDuration);
-
-      if (isEventOnSelectedDay) {
-        eventOccursOnSelectedDay = true;
-        break;
-      }
-
-      if (repeats === ERepeat.WEEKLY) {
-        tempDate.setDate(tempDate.getDate() + 7);
-      } else if (repeats === ERepeat.BI_WEEKLY) {
-        tempDate.setDate(tempDate.getDate() + 14);
-      } else if (repeats === ERepeat.MONTHLY) {
-        tempDate.setMonth(tempDate.getMonth() + 1);
-      }
+    if (
+      eventStartDate.toISOString().split('T')[0] === selectedDate ||
+      eventEndDate.toISOString().split('T')[0] === selectedDate ||
+      (eventStartDate <= selectedDate && eventEndDate >= selectedDate)
+    ) {
+      filteredEvents.push(event);
+      return;
     }
 
-    return eventOccursOnSelectedDay;
+    if (event.repeat !== ERepeat.ONCE) {
+      let repeatDate = new Date(event.startDate);
+      while (repeatDate.toISOString().split('T')[0] <= selectedDate) {
+        let repeatStart = new Date(repeatDate);
+        let repeatEnd = new Date(repeatStart.getTime() + eventDuration);
+
+        if (
+          repeatStart.toISOString().split('T')[0] === selectedDay ||
+          repeatEnd.toISOString().split('T')[0] === selectedDay ||
+          (repeatStart <= selectedDate && repeatEnd >= selectedDate)
+        ) {
+          filteredEvents.push(event);
+          break;
+        }
+
+        if (event.repeat === ERepeat.WEEKLY) {
+          repeatDate.setDate(repeatDate.getDate() + 7);
+        } else if (event.repeat === ERepeat.BI_WEEKLY) {
+          repeatDate.setDate(repeatDate.getDate() + 14);
+        } else if (event.repeat === ERepeat.MONTHLY) {
+          repeatDate.setMonth(repeatDate.getMonth() + 1);
+        }
+      }
+    }
   });
+
+  return filteredEvents;
 };

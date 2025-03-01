@@ -8,7 +8,7 @@ import { EventFormComponent } from '~/modules/components/event-form/event-form.c
 import { ERepeat, IEvent } from '~/shared/context/calendar/calendar.types';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS } from '~/shared/styles/colors';
-import { useCallback, useContext, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { BottomSheetContext } from '~/shared/context/bottom-sheet/bottom-sheet.context';
 import Animated, {
   useAnimatedStyle,
@@ -46,12 +46,12 @@ export const CalendarScreen = () => {
 
   const filteredEvent = useMemo(() => {
     return filterEvents(selectedDate, events);
-  }, [selectedDate]);
+  }, [selectedDate, events]);
 
   const renderItem = useCallback(
     (item: IEvent) => {
       if (isEditing === item.id) {
-        return <EventFormComponent event={item} />;
+        return <EventFormComponent event={item} setIsEditing={setIsEditing} />;
       }
 
       return <EventComponent event={item} onEdit={setIsEditing} />;

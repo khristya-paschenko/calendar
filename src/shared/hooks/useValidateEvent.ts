@@ -3,16 +3,12 @@ import { useCalendarContext } from '~/shared/context/calendar/calendar.context';
 import { useState } from 'react';
 
 type Response = {
-  isPending: boolean;
   error: string | null;
   onSubmit: (newEvent: Omit<IEvent, 'id'> & { id?: string }) => void;
-  savedSuccessfully: boolean;
 };
 
-export const useValidateEvent = (): Response => {
-  const [isPending, setIsPending] = useState(false);
+export const useValidateEvent = (onSuccess: () => void): Response => {
   const [error, setError] = useState<string | null>(null);
-  const [savedSuccessfully, setSavedSuccessfully] = useState(false);
   const { events, editEvent, addEvent } = useCalendarContext();
 
   const checkOverlap = (
@@ -29,7 +25,7 @@ export const useValidateEvent = (): Response => {
     events: IEvent[],
   ): boolean => {
     return events.some((existingEvent) => {
-      if (newEvent.id && existingEvent.id === newEvent.id) return false;
+      if (newEvent?.id === existingEvent.id) return false;
 
       if (checkOverlap(newEvent, existingEvent)) return true;
 
@@ -70,8 +66,6 @@ export const useValidateEvent = (): Response => {
   };
 
   const onSubmit = (newEvent: Omit<IEvent, 'id'> & { id?: string }) => {
-    setSavedSuccessfully(false);
-    setIsPending(true);
     setError(null);
 
     const hasConflict = doesConflict(newEvent, events);
@@ -83,11 +77,9 @@ export const useValidateEvent = (): Response => {
       } else {
         addEvent(newEvent);
       }
-      setSavedSuccessfully(true);
+      onSuccess();
     }
-
-    setIsPending(false);
   };
 
-  return { isPending, error, onSubmit, savedSuccessfully };
+  return { error, onSubmit };
 };

@@ -24,8 +24,8 @@ const calendarReducer: Reducer<IEvent[], ICalendarReducerAction> = (
 ) => {
   switch (action.type) {
     case ECalendarReducerAction.add:
-      const id = Math.random().toString();
-      const newEvents = [{ id, ...(action.payload as IEvent) }, ...state];
+      const id = String(Date.now());
+      const newEvents = [{ ...(action.payload as IEvent), id }, ...state];
       asyncStorage.setStringifiedData<IEvent[]>(EStore.CALENDAR, newEvents);
       return newEvents;
 

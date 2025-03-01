@@ -6,6 +6,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { styles } from '~/shared/components/calendar/calendar.styles';
 import { useCalendarContext } from '~/shared/context/calendar/calendar.context';
 import { formatMarkedDates } from '~/shared/util/format-marked-dates';
+import { useMemo } from 'react';
 
 type CalendarComponent = {
   setSelectedDate: (date: string) => void;
@@ -18,7 +19,9 @@ export const CalendarComponent = ({
   const selected = new Date(selectedDate).toISOString().split('T')[0];
   const { events } = useCalendarContext();
 
-  const markedEvents = formatMarkedDates(events);
+  const markedEvents = useMemo(() => {
+    return formatMarkedDates(events);
+  }, [events]);
 
   return (
     <View style={styles.container}>

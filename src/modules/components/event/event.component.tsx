@@ -45,7 +45,7 @@ export const EventComponent = ({ event, onEdit }: EventProps) => {
             <Text style={styles.info}>
               {formatTime(new Date(event.startDate)) +
                 ' - ' +
-                formatTime(new Date(event.startDate))}
+                formatTime(new Date(event.endDate))}
             </Text>
           </View>
         </View>
