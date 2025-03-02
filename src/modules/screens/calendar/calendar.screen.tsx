@@ -48,6 +48,7 @@ export const CalendarScreen = () => {
       heightValue.value = res === 'form' ? withTiming(580) : withTiming(0);
     } else {
       setIsOpen(option);
+      heightValue.value = withTiming(0);
     }
   };
 

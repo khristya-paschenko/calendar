@@ -37,6 +37,8 @@ export const EventFormComponent = memo(({ event, setIsOpen }: EventProps) => {
   const [isOpenPicker, setIsOpenPicker] = useState<TPicker>('');
   const heightValue = useSharedValue(0);
   const platform = Platform.OS;
+  const width = Dimensions.get('window').width;
+
   const { option } = useContext<BottomSheetContext>(BottomSheetContext);
 
   const { onSubmit, error } = useValidateEvent(() => {
@@ -126,8 +128,6 @@ export const EventFormComponent = memo(({ event, setIsOpen }: EventProps) => {
       }
     />
   );
-
-  const width = Dimensions.get('window').width;
 
   return (
     <View style={styles.container}>
