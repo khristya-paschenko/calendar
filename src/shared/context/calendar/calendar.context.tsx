@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import {
   ECalendarReducerAction,
+  ERepeat,
   ICalendarReducerAction,
   IEvent,
   IUpdateEvent,
@@ -66,6 +67,7 @@ export const CalendarContextProvider = ({
   >(calendarReducer, null);
 
   useEffect(() => {
+    // Adding test case, past event
     asyncStorage.getParsedData(EStore.CALENDAR).then((data) => {
       if (data) {
         dispatch({ type: ECalendarReducerAction.set, payload: data });
