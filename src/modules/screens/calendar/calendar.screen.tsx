@@ -17,6 +17,7 @@ import Animated, {
 import { filterEvents } from '~/shared/util/filter-events';
 import { EventComponent } from '~/modules/components/event/event.component';
 import PlusIcon from '~/../assets/icons/plus-icon.svg';
+import MinusIcon from '~/../assets/icons/minus-icon.svg';
 
 export const CalendarScreen = () => {
   const { events } = useCalendarContext();
@@ -24,7 +25,7 @@ export const CalendarScreen = () => {
   const [selectedDate, setSelectedDate] = useState<string>(today.toString());
   const heightValue = useSharedValue(0);
   const [isOpen, setIsOpen] = useState<string | '' | 'form'>('');
-  const [isToday, setIsToday] = useState<boolean>(false);
+  const [isInFuture, setIsInFuture] = useState<boolean>(false);
   const [newEvent, setNewEvent] = useState<Omit<IEvent, 'id'>>({
     name: '',
     endDate: selectedDate,
@@ -34,17 +35,20 @@ export const CalendarScreen = () => {
 
   const handleIsOpen = (option: string) => {
     if (option === 'form') {
+      let res;
       setIsOpen((prev) => {
         if (prev === option) {
-          return '';
+          res = '';
+          return res;
         }
-        return option;
+        res = option;
+
+        return res;
       });
+      heightValue.value = res === 'form' ? withTiming(580) : withTiming(0);
     } else {
       setIsOpen(option);
     }
-
-    heightValue.value = isOpen === 'form' ? withTiming(0) : withTiming(580);
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -59,8 +63,8 @@ export const CalendarScreen = () => {
       startDate: selectedDate,
       repeat: ERepeat.ONCE,
     });
-    setIsToday(
-      today.toISOString().split('T')[0] ===
+    setIsInFuture(
+      today.toISOString().split('T')[0] <=
         new Date(selectedDate).toISOString().split('T')[0],
     );
   }, [selectedDate]);
@@ -76,10 +80,14 @@ export const CalendarScreen = () => {
       }
 
       return (
-        <EventComponent event={item} onEdit={handleIsOpen} disabled={isToday} />
+        <EventComponent
+          event={item}
+          onEdit={handleIsOpen}
+          disabled={isInFuture}
+        />
       );
     },
-    [isOpen, events],
+    [isOpen, events, isInFuture],
   );
 
   return (
@@ -104,7 +112,7 @@ export const CalendarScreen = () => {
               }
               initialNumToRender={20}
             />
-            {isToday && (
+            {isInFuture && (
               <>
                 <TouchableOpacity
                   style={styles.addBtnContainer}
@@ -114,7 +122,11 @@ export const CalendarScreen = () => {
                     style={styles.addBtnGradient}
                     colors={COLORS.yellowGradient}
                   >
-                    <PlusIcon width={18} height={18} fill={COLORS.white} />
+                    {isOpen === 'form' ? (
+                      <MinusIcon width={18} height={18} fill={COLORS.white} />
+                    ) : (
+                      <PlusIcon width={18} height={18} fill={COLORS.white} />
+                    )}
                   </LinearGradient>
                   <Text style={styles.addBtnText}>Create New Event</Text>
                 </TouchableOpacity>

@@ -18,8 +18,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
-type TPicker = 'startTime' | 'startDate' | 'endTime' | 'endDate' | null;
+type TPicker = 'startTime' | 'startDate' | 'endTime' | 'endDate' | '';
 
 type EventProps = {
   event: Omit<IEvent, 'id'> & { id?: string };
@@ -28,22 +29,17 @@ type EventProps = {
 export const EventFormComponent = memo(({ event, setIsOpen }: EventProps) => {
   const [name, setName] = useState<string>(event.name);
   const [startDate, setStartDate] = useState<Date>(new Date(event.startDate));
-  const heightValue = useSharedValue(0);
   const [endDate, setEndDate] = useState<Date>(() => {
     const newDate = new Date(event.endDate);
     newDate.setHours(newDate.getHours() + 1);
     return newDate;
   });
-
+  const [isOpenPicker, setIsOpenPicker] = useState<TPicker>('');
+  const heightValue = useSharedValue(0);
+  const platform = Platform.OS;
   const { option } = useContext<BottomSheetContext>(BottomSheetContext);
 
   const { onSubmit, error } = useValidateEvent(() => {
-    setStartDate(new Date(event.startDate));
-    // setEndDate(() => {
-    //   const newDate = new Date(event.endDate);
-    //   newDate.setHours(newDate.getHours() + 1);
-    //   return newDate;
-    // });
     setName(event.name);
     setIsOpen('');
   });
@@ -77,13 +73,11 @@ export const EventFormComponent = memo(({ event, setIsOpen }: EventProps) => {
     });
   };
 
-  const [isOpenPicker, setIsOpenPicker] = useState<TPicker>(null);
-
   const togglePicker = (option: TPicker) => {
     setIsOpenPicker((current) => {
       let res;
       if (current === option) {
-        res = null;
+        res = '';
       } else {
         res = option;
       }
@@ -98,9 +92,43 @@ export const EventFormComponent = memo(({ event, setIsOpen }: EventProps) => {
     opacity: heightValue.value > 0 ? 1 : 0,
   }));
 
+  const handleOnChange = (date: Date, event: DateTimePickerEvent) => {
+    if (['startDate', 'startTime'].includes(isOpenPicker)) {
+      setStartDate(date);
+    } else {
+      setEndDate(date);
+    }
+
+    if (platform === 'android') {
+      if (event.type) {
+        setIsOpenPicker('');
+      }
+    }
+  };
+
+  const dateTimePicker = (
+    <DateTimePicker
+      datetime={
+        ['startDate', 'startTime'].includes(isOpenPicker) ? startDate : endDate
+      }
+      onChange={handleOnChange}
+      platform={platform}
+      mode={['startDate', 'endDate'].includes(isOpenPicker) ? 'date' : 'time'}
+      minDate={
+        (['startDate', 'startTime', 'endDate'].includes(isOpenPicker) &&
+          new Date(event.startDate)) ||
+        (isOpenPicker === 'endTime' &&
+          new Date(
+            new Date(startDate).setMinutes(
+              new Date(startDate).getMinutes() + 1,
+            ),
+          ))
+      }
+    />
+  );
+
   const width = Dimensions.get('window').width;
 
-  const platform = Platform.OS;
   return (
     <View style={styles.container}>
       <Input label="Event Name" value={name} onChange={(v) => setName(v)} />
@@ -154,36 +182,13 @@ export const EventFormComponent = memo(({ event, setIsOpen }: EventProps) => {
             </View>
           </View>
 
-          <Animated.View style={[styles.animated, animatedStyle]}>
-            <DateTimePicker
-              datetime={
-                ['startDate', 'startTime'].includes(isOpenPicker)
-                  ? startDate
-                  : endDate
-              }
-              onChange={
-                ['startDate', 'startTime'].includes(isOpenPicker)
-                  ? setStartDate
-                  : setEndDate
-              }
-              platform={platform}
-              mode={
-                ['startDate', 'endDate'].includes(isOpenPicker)
-                  ? 'date'
-                  : 'time'
-              }
-              minDate={
-                (['startDate', 'startTime', 'endDate'].includes(isOpenPicker) &&
-                  startDate) ||
-                (isOpenPicker === 'endTime' &&
-                  new Date(
-                    new Date(startDate).setMinutes(
-                      new Date(startDate).getMinutes() + 1,
-                    ),
-                  ))
-              }
-            />
-          </Animated.View>
+          {platform === 'ios' ? (
+            <Animated.View style={[styles.animated, animatedStyle]}>
+              {dateTimePicker}
+            </Animated.View>
+          ) : (
+            isOpenPicker && dateTimePicker
+          )}
         </View>
       </View>
 

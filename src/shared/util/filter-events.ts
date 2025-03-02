@@ -4,7 +4,8 @@ export const filterEvents = (
   selectedDay: string,
   events: IEvent[],
 ): IEvent[] => {
-  const selectedDate = new Date(selectedDay).toISOString().split('T')[0];
+  const selectedDate = new Date(selectedDay);
+  const selectedISO = selectedDate.toISOString().split('T')[0];
   const filteredEvents: IEvent[] = [];
 
   events.forEach((event) => {
@@ -12,26 +13,19 @@ export const filterEvents = (
     const eventEndDate = new Date(event.endDate);
     const eventDuration = eventEndDate.getTime() - eventStartDate.getTime();
 
-    if (
-      eventStartDate.toISOString().split('T')[0] === selectedDate ||
-      eventEndDate.toISOString().split('T')[0] === selectedDate ||
-      (eventStartDate <= selectedDate && eventEndDate >= selectedDate)
-    ) {
+    // Check if event spans over multiple days and includes the selected day
+    if (eventStartDate <= selectedDate && eventEndDate >= selectedDate) {
       filteredEvents.push(event);
       return;
     }
 
+    // Handle recurring events
     if (event.repeat !== ERepeat.ONCE) {
       let repeatDate = new Date(event.startDate);
-      while (repeatDate.toISOString().split('T')[0] <= selectedDate) {
-        let repeatStart = new Date(repeatDate);
-        let repeatEnd = new Date(repeatStart.getTime() + eventDuration);
+      while (repeatDate <= selectedDate) {
+        let repeatEnd = new Date(repeatDate.getTime() + eventDuration);
 
-        if (
-          repeatStart.toISOString().split('T')[0] === selectedDay ||
-          repeatEnd.toISOString().split('T')[0] === selectedDay ||
-          (repeatStart <= selectedDate && repeatEnd >= selectedDate)
-        ) {
+        if (repeatDate <= selectedDate && repeatEnd >= selectedDate) {
           filteredEvents.push(event);
           break;
         }
