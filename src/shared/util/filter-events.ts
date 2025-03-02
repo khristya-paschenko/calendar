@@ -1,11 +1,23 @@
+import {
+  parseISO,
+  isBefore,
+  isAfter,
+  addWeeks,
+  addMonths,
+  addDays,
+  parse,
+  isWithinInterval,
+  isSameDay,
+} from 'date-fns';
 import { IEvent, ERepeat } from '~/shared/context/calendar/calendar.types';
+import { Stack } from 'expo-router';
+import { weekDayNames } from 'react-native-calendars/src/dateutils';
 
 export const filterEvents = (
   selectedDay: string,
   events: IEvent[],
 ): IEvent[] => {
   const selectedDate = new Date(selectedDay);
-  const selectedISO = selectedDate.toISOString().split('T')[0];
   const filteredEvents: IEvent[] = [];
 
   events.forEach((event) => {
@@ -13,29 +25,36 @@ export const filterEvents = (
     const eventEndDate = new Date(event.endDate);
     const eventDuration = eventEndDate.getTime() - eventStartDate.getTime();
 
-    // Check if event spans over multiple days and includes the selected day
-    if (eventStartDate <= selectedDate && eventEndDate >= selectedDate) {
+    if (
+      isSameDay(selectedDate, eventStartDate) ||
+      isWithinInterval(selectedDate, {
+        start: eventStartDate,
+        end: eventEndDate,
+      })
+    ) {
       filteredEvents.push(event);
       return;
     }
 
-    // Handle recurring events
     if (event.repeat !== ERepeat.ONCE) {
-      let repeatDate = new Date(event.startDate);
-      while (repeatDate <= selectedDate) {
+      let repeatDate = eventStartDate;
+
+      while (!isAfter(repeatDate, selectedDate)) {
         let repeatEnd = new Date(repeatDate.getTime() + eventDuration);
 
-        if (repeatDate <= selectedDate && repeatEnd >= selectedDate) {
+        if (
+          isWithinInterval(selectedDate, { start: repeatDate, end: repeatEnd })
+        ) {
           filteredEvents.push(event);
           break;
         }
 
         if (event.repeat === ERepeat.WEEKLY) {
-          repeatDate.setDate(repeatDate.getDate() + 7);
+          repeatDate = addWeeks(repeatDate, 1);
         } else if (event.repeat === ERepeat.BI_WEEKLY) {
-          repeatDate.setDate(repeatDate.getDate() + 14);
+          repeatDate = addWeeks(repeatDate, 2);
         } else if (event.repeat === ERepeat.MONTHLY) {
-          repeatDate.setMonth(repeatDate.getMonth() + 1);
+          repeatDate = addMonths(repeatDate, 1);
         }
       }
     }

@@ -1,13 +1,19 @@
 # Welcome to Calendar
-This is a calendar app built using React Native and Expo. Users can add events with a specified time and date, and choose a repeat option. The repeat options include:
 
-* Never
-* Once
-* Weekly
-* Bi-weekly
-* Monthly
+This is a **Calendar App** that allows users to **add, edit, and delete events** with specific dates and times. Users can also select a **repeat option** when creating an event using a bottom sheet menu. The available repeat options are:
 
-Users can edit or delete events, but they cannot create or modify events that are in the past.
+- **Never** (one-time event)
+- **Once a week**
+- **Twice a month**
+- **Every month**
+
+### Features:
+✅ **Create Events** – Users can schedule events with a selected time and date.  
+✅ **Repeat Options** – Choose from multiple recurrence options when adding an event.  
+✅ **Edit & Delete Events** – Users can modify or remove events as needed.  
+✅ **Event Restrictions** – Users **cannot create or edit past events** to maintain accuracy.  
+✅ **Conflict Prevention** – The app ensures that events **do not overlap**, preventing scheduling conflicts.
+
 ## Getting Started
 
 1. Install dependencies

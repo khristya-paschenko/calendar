@@ -28,8 +28,16 @@ export const CalendarScreen = () => {
   const [isInFuture, setIsInFuture] = useState<boolean>(false);
   const [newEvent, setNewEvent] = useState<Omit<IEvent, 'id'>>({
     name: '',
-    endDate: selectedDate,
-    startDate: selectedDate,
+    endDate:
+      new Date(selectedDate).toISOString().split('T')[0] ===
+      today.toISOString().split('T')[0]
+        ? today.toISOString()
+        : selectedDate,
+    startDate:
+      new Date(selectedDate).toISOString().split('T')[0] ===
+      today.toISOString().split('T')[0]
+        ? today.toISOString()
+        : selectedDate,
     repeat: ERepeat.ONCE,
   });
 
@@ -60,8 +68,16 @@ export const CalendarScreen = () => {
   useEffect(() => {
     setNewEvent({
       name: '',
-      endDate: selectedDate,
-      startDate: selectedDate,
+      endDate:
+        new Date(selectedDate).toISOString().split('T')[0] ===
+        today.toISOString().split('T')[0]
+          ? today.toISOString()
+          : selectedDate,
+      startDate:
+        new Date(selectedDate).toISOString().split('T')[0] ===
+        today.toISOString().split('T')[0]
+          ? today.toISOString()
+          : selectedDate,
       repeat: ERepeat.ONCE,
     });
     setIsInFuture(
